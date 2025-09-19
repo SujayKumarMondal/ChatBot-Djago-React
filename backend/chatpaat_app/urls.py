@@ -1,9 +1,10 @@
 from django.urls import path 
 from . import views 
 from django.http import JsonResponse
+from django.shortcuts import render
 
 def home(request):
-    return JsonResponse({"message": "Welcome to ChatPaat API!"})
+    return render(request, "index.html")
 
 
 urlpatterns = [
