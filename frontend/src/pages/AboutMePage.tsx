@@ -15,7 +15,7 @@ export const AboutMePage = () => {
       >
         <User className="w-8 h-8 text-pink-600 animate-bounce" />
         <h1 className="text-4xl font-extrabold bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 bg-clip-text text-transparent">
-          About Me
+          Developer
         </h1>
       </motion.div>
 

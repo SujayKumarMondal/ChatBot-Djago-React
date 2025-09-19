@@ -9,7 +9,7 @@ import {
   MessageSquare,
   Zap,
   MessageSquarePlus,
-  MoreVertical, // 3-dot icon
+  // MoreVertical, // 3-dot icon
 } from "lucide-react";
 
 import {
@@ -122,26 +122,6 @@ export function AppSidebar() {
           )}
         </NavLink>
 
-        {/* 3-dot menu */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="p-1 h-6 w-6 flex items-center justify-center"
-            >
-              <MoreVertical className="w-4 h-4 text-muted-foreground" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => handleShare(chat)}>
-              Share
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleDelete(chat)}>
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
     </SidebarMenuItem>
   );
@@ -255,7 +235,7 @@ export function AppSidebar() {
           >
             <span className="flex items-center gap-2 text-sm font-medium">
               <Zap className="w-4 h-4" />
-              About Me
+              Developer
             </span>
             <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5">
               Check

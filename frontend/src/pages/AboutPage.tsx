@@ -14,7 +14,7 @@ export const AboutPage = () => {
       >
         <Bot className="w-8 h-8 text-pink-600 animate-bounce" />
         <h1 className="text-4xl font-extrabold bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 bg-clip-text text-transparent">
-          About ChatPaat
+          About ChatPaat (Inspired By ChatGPT)
         </h1>
       </motion.div>
 
