@@ -216,8 +216,16 @@ export function AppSidebar() {
           </SidebarGroup>
         </div>
 
-        {/* About the Developer */}
-        <div className="p-4 border-t">
+        {/* Feedback Button */}
+        <div className="p-4 border-t flex flex-col gap-2">
+          <a
+            href="https://forms.gle/67Aq2qoPTTmUXeYEA"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center justify-center bg-secondary text-secondary-foreground px-4 py-2 rounded-md hover:bg-secondary/90 transition font-semibold text-base"
+          >
+            📝 Feedback
+          </a>
           <Link
             to="/about-me"
             className="flex items-center justify-between bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition"
