@@ -53,9 +53,9 @@ def createChatTitle(user_message: str) -> str:
         data = response.json()
         title = data["choices"][0]["message"]["content"].strip()
         if not title:
-            title = user_message[:50]
+            title = user_message[:15]
     except Exception:
-        title = user_message[:50]
+        title = user_message[:15]
     return title
 
 # ======================= User Registration =======================
@@ -104,6 +104,14 @@ class RegisterView(APIView):
         
 @api_view(["POST"])
 def login_view(request):
+    """
+    POST /api/login/
+    {
+        "email": "<email>",
+        "password": "<password>"
+    }
+    Returns JWT tokens.
+    """
     email = request.data.get("email")
     password = request.data.get("password")
 

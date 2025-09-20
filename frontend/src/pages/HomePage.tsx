@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { SendHorizonalIcon } from "lucide-react";
+import { SendHorizonalIcon, Copy } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -12,6 +12,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Link } from "react-router-dom";
 
 export default function Homepage() {
+  const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { chat_uid } = useParams();
@@ -133,7 +134,7 @@ export default function Homepage() {
             ) : (
               <div
                 key={idx}
-                className="prose dark:prose-invert max-w-none bg-muted text-foreground p-4 rounded-lg shadow mb-4"
+                className="relative prose dark:prose-invert max-w-none bg-muted text-foreground p-4 rounded-lg shadow mb-4"
               >
                 <ReactMarkdown
                   components={{
@@ -158,6 +159,22 @@ export default function Homepage() {
                 >
                   {msg.content}
                 </ReactMarkdown>
+                <button
+                  className="absolute top-2 right-2 p-1 rounded hover:bg-gray-200"
+                  aria-label="Copy response"
+                  onClick={() => {
+                    navigator.clipboard.writeText(msg.content);
+                    setCopiedIdx(idx);
+                    setTimeout(() => setCopiedIdx(null), 3000);
+                  }}
+                >
+                  <Copy className="w-4 h-4 text-gray-600" />
+                </button>
+                {copiedIdx === idx && (
+                  <div className="absolute top-2 right-10 bg-black text-white text-xs px-2 py-1 rounded shadow z-50 animate-fade-in">
+                    copied successfully
+                  </div>
+                )}
               </div>
             )
           )}
