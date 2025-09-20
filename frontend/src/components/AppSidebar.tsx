@@ -1,15 +1,9 @@
 // File: AppSidebar.tsx
 import {
-  // Calendar,
-  // Home,
-  // Inbox,
-  // Search,
-  // Settings,
   Bot,
   MessageSquare,
   Zap,
   MessageSquarePlus,
-  MoreVertical, // 3-dot icon
 } from "lucide-react";
 
 import {
@@ -27,12 +21,12 @@ import { Badge } from "@/components/ui/badge";
 import { Link, NavLink } from "react-router-dom";
 import { Button } from "./ui/button";
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import {
   getSevenDaysChats,
   getTodaysChats,
   getYesterdaysChats,
 } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
 
 // Dropdown menu imports
@@ -42,14 +36,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown";
-
-// const mainNav = [
-//   { title: "Home", url: "#", icon: Home },
-//   { title: "Inbox", url: "#", icon: Inbox },
-//   { title: "Calendar", url: "#", icon: Calendar },
-//   { title: "Search", url: "#", icon: Search },
-//   { title: "Settings", url: "#", icon: Settings },
-// ];
 
 interface IChat {
   id: string;
@@ -61,33 +47,59 @@ export function AppSidebar() {
   const [recentChats, setRecentChats] = useState<IChat[]>([]);
   const [yesterdaysChats, setYesterdaysChat] = useState<IChat[]>([]);
   const [sevenDaysChats, setSevenDaysChat] = useState<IChat[]>([]);
+  const { user, signOut } = useAuth();
+  const token = localStorage.getItem("access_token") || "";
 
-  const { data: toDaysData } = useQuery({
-    queryKey: ["todaysChat"],
-    queryFn: getTodaysChats,
-  });
-
-  const { data: yesterdaysData } = useQuery({
-    queryKey: ["yesterdaysChat"],
-    queryFn: getYesterdaysChats,
-  });
-
-  const { data: sevenDaysData } = useQuery({
-    queryKey: ["sevenDaysChat"],
-    queryFn: getSevenDaysChats,
-  });
+  // ⏰ IST Clock
+  const [time, setTime] = useState("");
+  useEffect(() => {
+    const updateClock = () => {
+      const now = new Date();
+      const options: Intl.DateTimeFormatOptions = {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+        timeZone: "Asia/Kolkata",
+      };
+      setTime(new Intl.DateTimeFormat("en-IN", options).format(now));
+    };
+    updateClock();
+    const interval = setInterval(updateClock, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
-    if (toDaysData) setRecentChats(toDaysData);
-  }, [toDaysData]);
+    async function fetchChats() {
+      if (!token) {
+        setRecentChats([]);
+        setYesterdaysChat([]);
+        setSevenDaysChat([]);
+        return;
+      }
+      try {
+        const today = await getTodaysChats(token);
+        setRecentChats(today || []);
+        const yesterday = await getYesterdaysChats(token);
+        setYesterdaysChat(yesterday || []);
+        const seven = await getSevenDaysChats(token);
+        setSevenDaysChat(seven || []);
+      } catch {
+        setRecentChats([]);
+        setYesterdaysChat([]);
+        setSevenDaysChat([]);
+      }
+    }
+    fetchChats();
+  }, [token, user]);
 
-  useEffect(() => {
-    if (yesterdaysData) setYesterdaysChat(yesterdaysData);
-  }, [yesterdaysData]);
-
-  useEffect(() => {
-    if (sevenDaysData) setSevenDaysChat(sevenDaysData);
-  }, [sevenDaysData]);
+  // Clear chats on logout
+  const handleLogout = () => {
+    setRecentChats([]);
+    setYesterdaysChat([]);
+    setSevenDaysChat([]);
+    signOut();
+  };
 
   const handleShare = (chat: IChat) => {
     const url = `${window.location.origin}/chats/${chat.id}`;
@@ -121,27 +133,6 @@ export function AppSidebar() {
             </SidebarMenuButton>
           )}
         </NavLink>
-
-        {/* 3-dot menu */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="p-1 h-6 w-6 flex items-center justify-center"
-            >
-              <MoreVertical className="w-4 h-4 text-muted-foreground" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => handleShare(chat)}>
-              Share
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleDelete(chat)}>
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
     </SidebarMenuItem>
   );
@@ -150,37 +141,15 @@ export function AppSidebar() {
     <Sidebar className="bg-background text-foreground border-r">
       <SidebarContent className="flex flex-col justify-between h-full">
         <div>
-          {/* Main Nav */}
+          {/* ⏰ IST Clock */}
           <SidebarGroup>
-            <SidebarGroupLabel className="text-xs text-muted-foreground uppercase px-4 pt-4 pb-2">
-              Main Menu
-              <Badge
-                variant="secondary"
-                className="ml-2 text-[10px] px-1.5 py-0.5"
-              >
-                Pro
-              </Badge>
+            <SidebarGroupLabel className="flex justify-center items-center text-lg font-bold px-4 pt-4 pb-2">
+              🕒 {time} IST
             </SidebarGroupLabel>
-            <SidebarGroupContent>
-              {/* <SidebarMenu>
-                {mainNav.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <Link
-                        to={item.url}
-                        className="flex items-center gap-3 px-4 py-2 hover:bg-muted rounded-md transition"
-                      >
-                        <item.icon className="w-5 h-5 text-muted-foreground" />
-                        <span className="text-sm font-medium">{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu> */}
-            </SidebarGroupContent>
           </SidebarGroup>
 
-          <div className="px-4 pt-4">
+          {/* New Chat */}
+          <div className="px-4 pt-4 flex gap-2">
             <Button
               variant="secondary"
               className="w-full justify-start cursor-pointer gap-2"
@@ -255,7 +224,7 @@ export function AppSidebar() {
           >
             <span className="flex items-center gap-2 text-sm font-medium">
               <Zap className="w-4 h-4" />
-              About Me
+              Developer
             </span>
             <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5">
               Check

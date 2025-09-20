@@ -7,7 +7,8 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -126,6 +127,7 @@ def login_view(request):
     })# ======================= Chat / Groq Endpoints =======================
 
 @api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def prompt_gpt(request):
     data = request.data
     chat_id = data.get("chat_id")
@@ -136,7 +138,10 @@ def prompt_gpt(request):
     if not content:
         return Response({"error": "No prompt content provided."}, status=400)
 
-    chat, _ = Chat.objects.get_or_create(id=chat_id)
+    # Always associate chat with user
+    chat, created = Chat.objects.get_or_create(id=chat_id, defaults={"user": request.user})
+    if not created and chat.user != request.user:
+        return Response({"error": "Unauthorized access to chat."}, status=403)
 
     if not chat.title:
         try:
@@ -174,35 +179,41 @@ def prompt_gpt(request):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def get_chat_messages(request, pk):
     chat = get_object_or_404(Chat, id=pk)
+    if chat.user != request.user:
+        return Response({"error": "Unauthorized access to chat messages."}, status=403)
     messages = chat.messages.order_by("created_at")
     serializer = ChatMessageSerializer(messages, many=True)
     return Response(serializer.data)
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def todays_chat(request):
     today = timezone.now().date()
-    chats = Chat.objects.filter(created_at__date=today).order_by("-created_at")[:10]
+    chats = Chat.objects.filter(user=request.user, created_at__date=today).order_by("-created_at")[:10]
     serializer = ChatSerializer(chats, many=True)
     return Response(serializer.data)
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def yesterdays_chat(request):
     today = timezone.now().date()
     yesterday = today - timedelta(days=1)
-    chats = Chat.objects.filter(created_at__date=yesterday).order_by("-created_at")[:10]
+    chats = Chat.objects.filter(user=request.user, created_at__date=yesterday).order_by("-created_at")[:10]
     serializer = ChatSerializer(chats, many=True)
     return Response(serializer.data)
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def seven_days_chat(request):
     today = timezone.now().date()
     yesterday = today - timedelta(days=1)
     seven_days_ago = today - timedelta(days=7)
-    chats = Chat.objects.filter(created_at__lt=yesterday, created_at__gte=seven_days_ago).order_by("-created_at")[:10]
+    chats = Chat.objects.filter(user=request.user, created_at__lt=yesterday, created_at__gte=seven_days_ago).order_by("-created_at")[:10]
     serializer = ChatSerializer(chats, many=True)
     return Response(serializer.data)

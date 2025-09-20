@@ -15,10 +15,11 @@ class CustomUser(AbstractUser):
 
 class Chat(models.Model):
     """
-    A simple Chat model holding an id and optional title and timestamps.
+    A simple Chat model holding an id, optional title, timestamps, and user association.
     Messages are in ChatMessage (related_name='messages').
     """
     id = models.UUIDField(default=uuid.uuid4, primary_key=True, editable=False)
+    user = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='chats', null=True, blank=True)
     title = models.CharField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

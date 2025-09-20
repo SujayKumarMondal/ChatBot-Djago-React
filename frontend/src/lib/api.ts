@@ -25,9 +25,11 @@ function handleError(err: unknown): never {
 }
 
 // 🔹 Prompt GPT
-export async function promptGPT(data: { chat_id: string; content: string }) {
+export async function promptGPT(data: { chat_id: string; content: string }, token: string) {
   try {
-    const response = await api.post("/prompt_gpt/", data);
+    const response = await api.post("/prompt_gpt/", data, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
     return response.data;
   } catch (err: unknown) {
     handleError(err);
@@ -35,10 +37,12 @@ export async function promptGPT(data: { chat_id: string; content: string }) {
 }
 
 // 🔹 Get messages of a chat
-export async function getChatMessages(chatId: string) {
+export async function getChatMessages(chatId: string, token: string) {
   if (!chatId) return [];
   try {
-    const response = await api.get(`/get_chat_messages/${chatId}/`);
+    const response = await api.get(`/get_chat_messages/${chatId}/`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
     return response.data;
   } catch (err: unknown) {
     handleError(err);
@@ -46,9 +50,13 @@ export async function getChatMessages(chatId: string) {
 }
 
 // 🔹 Today's chats
-export async function getTodaysChats() {
+export async function getTodaysChats(token: string) {
   try {
-    const response = await api.get("/todays_chat/");
+    const response = await api.get("/todays_chat/", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     return response.data;
   } catch (err: unknown) {
     handleError(err);
@@ -56,9 +64,13 @@ export async function getTodaysChats() {
 }
 
 // 🔹 Yesterday's chats
-export async function getYesterdaysChats() {
+export async function getYesterdaysChats(token: string) {
   try {
-    const response = await api.get("/yesterdays_chat/");
+    const response = await api.get("/yesterdays_chat/", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     return response.data;
   } catch (err: unknown) {
     handleError(err);
@@ -66,9 +78,13 @@ export async function getYesterdaysChats() {
 }
 
 // 🔹 Last 7 days chats
-export async function getSevenDaysChats() {
+export async function getSevenDaysChats(token: string) {
   try {
-    const response = await api.get("/seven_days_chat/");
+    const response = await api.get("/seven_days_chat/", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     return response.data;
   } catch (err: unknown) {
     handleError(err);
