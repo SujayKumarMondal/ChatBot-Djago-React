@@ -7,55 +7,38 @@ import vs2015 from "react-syntax-highlighter/dist/esm/styles/prism/atom-dark";
 import { Textarea } from "@/components/ui/textarea";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import TypingLoader from "@/components/TypingLoader";
-
-/**
- * 🔹 Call your backend (which internally talks to Groq API)
- */
-async function promptGroq({
-  chat_id,
-  content,
-}: {
-  chat_id: string;
-  content: string;
-}) {
-  try {
-    const response = await fetch("http://127.0.0.1:7004/prompt_gpt/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ chat_id, content }), // ✅ FIXED: backend expects "content"
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`HTTP ${response.status}: ${errText}`);
-    }
-
-    return await response.json();
-  } catch (err: any) {
-    return { reply: `⚠️ Error: ${err.message}` };
-  }
-}
+import { promptGPT } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
+import { Link } from "react-router-dom";
 
 export default function Homepage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { chat_uid } = useParams();
-
+  const { user } = useAuth();
   const [input, setInput] = useState("");
   const [chatID, setChatID] = useState("");
   const [messages, setMessages] = useState<
     { role: "user" | "assistant"; content: string }[]
   >([{ role: "assistant", content: "Welcome! I'm here to assist you." }]);
 
+  // Get JWT token from localStorage
+  const token = localStorage.getItem("access_token") || "";
+
   useEffect(() => {
     setChatID(chat_uid ? chat_uid : crypto.randomUUID());
   }, [chat_uid]);
 
+  useEffect(() => {
+    if (!user) {
+      setMessages([]);
+    }
+  }, [user]);
+
   // 🔹 Send message
   const mutation = useMutation({
-    mutationFn: promptGroq,
+    mutationFn: ({ chat_id, content }: { chat_id: string; content: string }) =>
+      promptGPT({ chat_id, content }, token),
     onSuccess: (res) => {
       console.log("Groq Response:", res);
       if (res?.reply) {
@@ -68,7 +51,10 @@ export default function Homepage() {
     onError: (error: any) => {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: `⚠️ Error: ${error.message}` },
+        {
+          role: "assistant",
+          content: `⚠️ Error: Please log in to use the service. ${error.message}`,
+        },
       ]);
     },
   });
@@ -77,7 +63,11 @@ export default function Homepage() {
   const { data: chatData } = useQuery({
     queryKey: ["chatMessages", chatID],
     queryFn: async () => {
-      const res = await fetch(`http://127.0.0.1:7004/chats/${chatID}`);
+      const res = await fetch(`http://127.0.0.1:7004/chats/${chatID}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       if (!res.ok) return []; // prevent blank screen
       return res.json();
     },
@@ -128,7 +118,7 @@ export default function Homepage() {
   };
 
   return (
-    <div className="flex flex-1">
+    <div className="flex flex-1 flex-col min-h-screen">
       <div className="flex flex-col flex-1 bg-background text-foreground">
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
@@ -201,6 +191,12 @@ export default function Homepage() {
           </div>
         </div>
       </div>
+      {/* Footer */}
+      <footer className="w-full text-center py-4 text-xs text-muted-foreground bg-background border-t">
+        By messaging ChatPaat, you agree to our{' '}
+        <Link to="/terms" className="underline hover:text-primary">Terms</Link> and have read our{' '}
+        <Link to="/privacy-policy" className="underline hover:text-primary">Privacy Policy</Link>.
+      </footer>
     </div>
   );
 }

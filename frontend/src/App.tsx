@@ -6,6 +6,8 @@ import { AboutPage } from "./pages/AboutPage";
 import { AboutMePage } from "./pages/AboutMePage";
 import RegisterPage from "./pages/RegisterPage";
 import { AuthProvider } from "./context/AuthContext";
+import TermsPage from "./pages/TermsPage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 
 const App = () => {
   return (
@@ -22,6 +24,8 @@ const App = () => {
             <Route index element={<HomePage />} />
             <Route path="chats/:chat_uid" element={<HomePage />} />
             <Route path="chats/new" element={<HomePage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           </Route>
         </Routes>
       </BrowserRouter>
